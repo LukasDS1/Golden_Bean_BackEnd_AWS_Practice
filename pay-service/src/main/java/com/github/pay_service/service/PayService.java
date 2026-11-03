@@ -2,9 +2,11 @@ package com.github.pay_service.service;
 
 import java.util.List;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import com.github.pay_service.dto.PaymentRequest;
+import com.github.pay_service.event.PaymentCreatedEvent;
 import com.github.pay_service.model.Payment;
 import com.github.pay_service.model.PaymentItem;
 import com.github.pay_service.repository.PaymentRepository;
@@ -16,6 +18,8 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class PayService {
+
+    private final ApplicationEventPublisher events; 
     
     private final PaymentRepository paymentRepository;
 
@@ -42,8 +46,9 @@ public class PayService {
             }).toList();
 
         payment.setItems(items);
-
-        return paymentRepository.save(payment);
+        Payment saved = paymentRepository.save(payment);
+        events.publishEvent(PaymentCreatedEvent.from(saved));
+        return saved;
     }
 
 }
